@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>متابعة طلبك | طلبك جاهز ☕</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#f5efe6;
+color:#35281c;
+font-family:system-ui,Tahoma,sans-serif
+}
+
+main{
+max-width:520px;
+margin:9vh auto;
+padding:20px
+}
+
+.card{
+background:white;
+padding:30px 22px;
+border-radius:22px;
+box-shadow:0 8px 28px #4b36221a;
+text-align:center
+}
+
+h1{color:#805a3b}
+
+.number{
+font-size:46px;
+font-weight:800;
+color:#805a3b
+}
+
+.status{
+background:#f4eadb;
+border-radius:12px;
+padding:17px;
+font-size:22px;
+font-weight:700
+}
+
+.muted{color:#75685d}
+.error{color:#9e3434}
+</style>
+</head>
+
+<body>
+
+<main>
+<div class="card">
+
+<h1>☕ طلبك جاهز</h1>
+
+<p id="cafe" class="muted">
+جاري تحميل الطلب...
+</p>
+
+<div id="details" hidden>
+
+<p class="muted">رقم طلبك</p>
+<div id="number" class="number"></div>
+
+<p id="status" class="status"></p>
+
+<p class="muted">
+تتحدث حالة الطلب تلقائيًا
+</p>
+
+</div>
+
+<p id="error" class="error"></p>
+
+</div>
+</main>
+
+<script type="module">
+
+import {initializeApp} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+getFirestore,
+doc,
+onSnapshot
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+projectId:"talabak-jahiz-ba884",
+storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+messagingSenderId:"328520935117",
+appId:"1:328520935117:web:96c8d056b218855735ab84",
+measurementId:"G-JK18QQ6XMP"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+
+const id=new URLSearchParams(
+location.search
+).get("id");
+
+const states={
+received:"تم استلام الطلب 🧾",
+preparing:"جاري تجهيز طلبك ☕",
+ready:"طلبك جاهز للاستلام ✅",
+delivered:"تم تسليم الطلب 🎉"
+};
+
+if(!id||!/^[0-9a-f-]{36}$/i.test(id)){
+
+$("cafe").textContent="";
+$("error").textContent="رابط الطلب غير صحيح";
+
+}else{
+
+onSnapshot(
+doc(db,"orders",id),
+snapshot=>{
+
+if(!snapshot.exists()){
+$("cafe").textContent="";
+$("details").hidden=true;
+$("error").textContent="الطلب غير موجود";
+return;
+}
+
+const order=snapshot.data();
+
+$("cafe").textContent=order.cafeName||"";
+$("number").textContent=order.number||"";
+
+$("status").textContent=
+states[order.status]||"حالة الطلب غير معروفة";
+
+$("details").hidden=false;
+$("error").textContent="";
+
+},
+e=>{
+$("cafe").textContent="";
+$("error").textContent=
+"تعذر تحميل الطلب، حاول تحديث الصفحة";
+}
+);
+
+}
+
+</script>
+</body>
+</html>
