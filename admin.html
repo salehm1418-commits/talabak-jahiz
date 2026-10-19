@@ -1,0 +1,280 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إدارة المنصة | طلبك جاهز</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#15100c;
+color:#fff;
+font-family:system-ui,Tahoma,sans-serif
+}
+
+main{
+max-width:750px;
+margin:30px auto;
+padding:15px
+}
+
+.card{
+background:#241b15;
+border:1px solid #59422f;
+border-radius:16px;
+padding:20px;
+margin-bottom:15px
+}
+
+h1,h2,h3{color:#eac08a}
+
+input{
+width:100%;
+padding:13px;
+margin:7px 0 13px;
+background:#15100c;
+color:white;
+border:1px solid #795b3f;
+border-radius:9px;
+font:inherit
+}
+
+button{
+background:#d5a36b;
+color:#23160b;
+border:0;
+border-radius:9px;
+padding:12px 16px;
+margin:5px;
+font:inherit;
+font-weight:bold;
+cursor:pointer
+}
+
+button.danger{
+background:#853b3b;
+color:white
+}
+
+.hide{display:none!important}
+.order{border-top:1px solid #5a4430;padding:15px 0}
+.msg{color:#ffd39b}
+</style>
+</head>
+
+<body>
+
+<main>
+
+<h1>لوحة مالك المنصة 👑</h1>
+
+<section id="login" class="card hide">
+
+<h2>تسجيل دخول مالك المنصة</h2>
+
+<input id="email" type="email"
+placeholder="البريد الإلكتروني">
+
+<input id="password" type="password"
+placeholder="كلمة المرور">
+
+<button id="loginBtn">دخول</button>
+
+<p id="loginMsg" class="msg"></p>
+
+</section>
+
+<section id="panel" class="card hide">
+
+<h2>إدارة اشتراكات الكافيهات</h2>
+
+<button id="logout" class="danger">
+تسجيل الخروج
+</button>
+
+<div id="cafes"></div>
+
+<p id="msg" class="msg"></p>
+
+</section>
+
+</main>
+
+<script type="module">
+
+import {initializeApp} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged,
+signInWithEmailAndPassword,
+signOut
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+doc,
+onSnapshot,
+updateDoc,
+Timestamp
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+projectId:"talabak-jahiz-ba884",
+storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+messagingSenderId:"328520935117",
+appId:"1:328520935117:web:96c8d056b218855735ab84",
+measurementId:"G-JK18QQ6XMP"
+};
+
+const ADMIN_UID=
+"Jbx8OGTp1LfLW1pDhwpyGeEY6oS2";
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+
+function escapeHtml(value){
+return String(value??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+}
+
+let stop=null;
+
+$("loginBtn").onclick=async()=>{
+try{
+
+await signInWithEmailAndPassword(
+auth,
+$("email").value.trim(),
+$("password").value
+);
+
+$("loginMsg").textContent="";
+
+}catch(e){
+$("loginMsg").textContent=
+"تعذر تسجيل الدخول: "+e.code;
+}
+};
+
+$("logout").onclick=()=>signOut(auth);
+
+onAuthStateChanged(auth,u=>{
+
+stop?.();
+stop=null;
+
+const allowed=u?.uid===ADMIN_UID;
+
+$("login").classList.toggle("hide",allowed);
+$("panel").classList.toggle("hide",!allowed);
+
+if(u&&!allowed){
+$("loginMsg").textContent=
+"هذا الحساب ليس حساب مالك المنصة";
+return;
+}
+
+if(allowed){
+watch();
+}
+});
+
+function watch(){
+
+stop=onSnapshot(
+collection(db,"cafes"),
+snapshot=>{
+
+$("cafes").innerHTML=snapshot.docs.map(d=>{
+
+const c=d.data();
+
+const expiry=c.subscriptionEndsAt?.toDate?.()
+.toLocaleDateString("ar-SA")||"—";
+
+return `
+<div class="order">
+
+<h3>${escapeHtml(c.name)}</h3>
+
+<p>الحالة: ${escapeHtml(c.subscriptionStatus)}</p>
+
+<p>انتهاء الاشتراك: ${escapeHtml(expiry)}</p>
+
+<button data-id="${d.id}" data-days="30">
+تفعيل 30 يوم
+</button>
+
+<button data-id="${d.id}" data-days="90">
+تفعيل 90 يوم
+</button>
+
+<button data-id="${d.id}" data-days="0"
+class="danger">
+إيقاف الاشتراك
+</button>
+
+</div>
+`;
+
+}).join("")||"لا توجد كافيهات";
+
+$("cafes").querySelectorAll(
+"button[data-days]"
+).forEach(button=>{
+
+button.onclick=async()=>{
+try{
+
+const days=Number(button.dataset.days);
+
+await updateDoc(
+doc(db,"cafes",button.dataset.id),
+{
+subscriptionStatus:days?"active":"suspended",
+subscriptionEndsAt:days
+?Timestamp.fromMillis(Date.now()+days*86400000)
+:null
+}
+);
+
+$("msg").textContent=
+"تم تحديث الاشتراك بنجاح";
+
+}catch(e){
+$("msg").textContent="خطأ: "+e.code;
+}
+};
+
+});
+
+},
+e=>{
+$("msg").textContent="خطأ: "+e.code;
+}
+);
+
+}
+
+</script>
+</body>
+</html>
