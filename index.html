@@ -3,227 +3,221 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#15100c">
 <title>طلبك جاهز ☕</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#15100c;color:#fff;font-family:Tahoma,Arial,sans-serif}
-header{padding:24px 16px;text-align:center;background:#241a14;border-bottom:1px solid #4d3828}
-header h1{margin:0;color:#e8bd83;font-size:29px}
-header p{color:#c4b4a3;font-size:13px}
+header{text-align:center;padding:26px 12px;background:#241b15}
+h1{color:#e8bd83;margin:0 0 8px}
+header p{color:#c4b4a3;font-size:14px}
 main{max-width:650px;margin:auto;padding:18px}
 .tabs{display:flex;gap:10px;margin-bottom:20px}
-button{font-family:inherit;cursor:pointer;border:0;border-radius:13px;padding:14px;font-weight:bold;font-size:15px}
-.tabs button{flex:1;background:#35271e;color:#eee}
-.tabs button.active{background:#c99558;color:#17100a}
-.card{background:#241b15;border:1px solid #4c3727;border-radius:20px;padding:20px;margin-bottom:16px}
-h2{margin:0 0 16px;color:#e8bd83}
-.primary{background:#c99558;color:#18110b;width:100%}
-.secondary{background:#3c3027;color:#fff}
-.ready{background:#208452;color:white}
-.small{font-size:12px;color:#c9b9a7}
-.order{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 0;border-bottom:1px solid #47382c}
-.order:last-child{border-bottom:0}
-.order strong{font-size:21px}
-.badge{display:inline-block;background:#493723;color:#f2cb8f;padding:7px 11px;border-radius:20px;font-size:12px}
-.badge.done{background:#174c34;color:#91efb5}
-.center{text-align:center}
-.number{font-size:54px;font-weight:bold;color:#e8bd83;margin:12px 0}
-#qr{display:flex;justify-content:center;margin:20px auto;background:white;padding:12px;width:max-content;max-width:100%}
-#qr img{max-width:100%}
-.hidden{display:none!important}
-input{background:#35271e;border:1px solid #68503b;color:white;padding:14px;border-radius:12px;font-size:16px;width:100%;margin:10px 0}
-a{color:#f1c18a;overflow-wrap:anywhere}
-.status{padding:20px;border-radius:16px;background:#392b20;margin:20px 0}
-.status.done{background:#174b33}
-footer{text-align:center;color:#8d7d6b;font-size:12px;padding:25px}
+button,input{font:inherit}
+button{cursor:pointer;border:0;border-radius:12px;padding:13px}
+.tabs button{flex:1;background:#35271e;color:#fff}
+.tabs button.active{background:#c99558;color:#17100b;font-weight:bold}
+.card{background:#241b15;border:1px solid #4c3728;border-radius:18px;padding:20px;margin-bottom:16px}
+h2{color:#e8bd83;font-size:20px;margin-top:0}
+input{width:100%;padding:13px;border:1px solid #765b43;border-radius:10px;background:#17110e;color:white;margin:8px 0}
+.primary{background:#c99558;color:#17100b;font-weight:bold;width:100%}
+.ready{background:#33875a;color:white}
+.small{font-size:13px;color:#c4b4a3}
+.order{border-top:1px solid #554031;padding:15px 0}
+.number{font-size:32px;font-weight:bold;color:#e8bd83}
+.status{padding:12px;border-radius:10px;background:#44321f;margin:12px 0}
+.done{background:#174d32;color:#b8f3ce}
+#qr{display:block;margin:20px auto;max-width:220px;width:100%;background:white;padding:10px;border-radius:12px}
+a{color:#e8bd83}
+.hidden{display:none}
+.error{color:#ffb1a6}
 </style>
 </head>
 <body>
-
 <header>
-<h1>☕ طلبك جاهز</h1>
-<p>وداعًا للبيجر... طلبك على جوالك</p>
+<h1>طلبك جاهز ☕</h1>
+<p>تابع طلبك بكل سهولة ومن دون تسجيل</p>
 </header>
-
 <main>
-<div class="tabs">
-<button id="staffTab" class="active" onclick="showTab('staff')">لوحة الكافيه</button>
-<button id="customerTab" onclick="showTab('customer')">صفحة العميل</button>
+<div class="tabs" id="tabs">
+<button id="staffTab" onclick="showPage('staff')">لوحة الكافيه</button>
+<button id="customerTab" onclick="showPage('customer')">صفحة العميل</button>
 </div>
 
-<section id="staff">
+<section id="staff" class="hidden">
+<div class="card" id="loginCard">
+<h2>دخول الموظف</h2>
+<input id="email" type="email" placeholder="البريد الإلكتروني">
+<input id="password" type="password" placeholder="كلمة المرور">
+<button class="primary" onclick="login()">دخول</button>
+<p id="loginMsg" class="small"></p>
+</div>
+
+<div id="staffPanel" class="hidden">
 <div class="card">
 <h2>إدارة الطلبات</h2>
-<button class="primary" onclick="newOrder()">＋ إنشاء طلب جديد</button>
-<p class="small">اضغط لإنشاء رقم طلب ورمز QR.</p>
+<button class="primary" onclick="newOrder()">+ إنشاء طلب جديد</button>
+<p class="small">يظهر رمز QR بعد إنشاء الطلب</p>
+<button onclick="logout()">تسجيل الخروج</button>
 </div>
-
-<div id="newOrderBox" class="card center hidden">
-<h2>تم إنشاء الطلب</h2>
-<div id="createdNumber" class="number"></div>
-<p>خل العميل يمسح الرمز</p>
-<div id="qr"></div>
-<p class="small">الرابط التجريبي:</p>
-<a id="orderLink" target="_blank"></a>
-<br><br>
-<button class="secondary" onclick="document.getElementById('newOrderBox').classList.add('hidden')">إغلاق</button>
+<div class="card hidden" id="newOrderCard">
+<h2>رمز الطلب الجديد</h2>
+<div class="number" id="newNumber"></div>
+<img id="qr" alt="رمز QR للطلب">
+<p class="small">العميل يصوّر الرمز ويفتح صفحة طلبه مباشرة</p>
+<a id="orderLink" target="_blank">فتح رابط الطلب</a>
 </div>
-
 <div class="card">
-<h2>الطلبات الحالية</h2>
-<div id="ordersList"></div>
+<h2>الطلبات</h2>
+<div id="orders">جارٍ التحميل...</div>
+</div>
 </div>
 </section>
 
 <section id="customer" class="hidden">
-<div class="card center">
+<div class="card">
 <h2>متابعة طلبك</h2>
-<p class="small">أدخل رقم الطلب أو افتح رابط QR</p>
-<input id="searchNumber" placeholder="مثال: 101" inputmode="numeric">
-<button class="primary" onclick="searchOrder()">عرض حالة الطلب</button>
+<div id="customerOrder"></div>
 </div>
-<div id="customerResult"></div>
 </section>
 </main>
 
-<footer>طلبك جاهز ☕ — نسخة تجريبية</footer>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import {getFirestore,collection,doc,addDoc,getDoc,updateDoc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
 
-<script>
-const STORAGE_KEY="talabak_demo_orders_v1";
-let orders=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
-let currentCustomer=null;
-let lastStatus=null;
+const firebaseConfig={
+ apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+ authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+ projectId:"talabak-jahiz-ba884",
+ storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+ messagingSenderId:"328520935117",
+ appId:"1:328520935117:web:96c8d056b218855735ab84",
+ measurementId:"G-JK18QQ6XMP"
+};
 
-function save(){
- localStorage.setItem(STORAGE_KEY,JSON.stringify(orders));
-}
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
+const ordersRef=collection(db,"orders");
+let stopOrders=null;
+let stopCustomer=null;
 
-function showTab(tab){
- document.getElementById("staff").classList.toggle("hidden",tab!=="staff");
- document.getElementById("customer").classList.toggle("hidden",tab!=="customer");
- document.getElementById("staffTab").classList.toggle("active",tab==="staff");
- document.getElementById("customerTab").classList.toggle("active",tab==="customer");
-}
+const el=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const orderId=params.get("order");
 
-function newOrder(){
- const max=Math.max(100,...orders.map(o=>o.number));
- const number=max+1;
- orders.unshift({number,status:"preparing",created:Date.now()});
- save();
- renderOrders();
+window.showPage=function(page){
+ el("staff").classList.toggle("hidden",page!=="staff");
+ el("customer").classList.toggle("hidden",page!=="customer");
+ el("staffTab").classList.toggle("active",page==="staff");
+ el("customerTab").classList.toggle("active",page==="customer");
+};
 
- const link=location.origin+location.pathname+"?order="+number;
- document.getElementById("createdNumber").textContent="#"+number;
- document.getElementById("orderLink").href=link;
- document.getElementById("orderLink").textContent=link;
-
- // QR image service is for demonstration only
- const qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data="+encodeURIComponent(link);
- document.getElementById("qr").innerHTML="";
- const img=document.createElement("img");
- img.src=qrUrl;
- img.alt="QR الطلب "+number;
- img.width=220;
- img.height=220;
- document.getElementById("qr").appendChild(img);
- document.getElementById("newOrderBox").classList.remove("hidden");
-}
-
-function renderOrders(){
- const el=document.getElementById("ordersList");
- if(!orders.length){
-  el.innerHTML='<p class="small center">لا توجد طلبات حاليًا</p>';
-  return;
+window.login=async function(){
+ try{
+  el("loginMsg").textContent="جارٍ الدخول...";
+  await signInWithEmailAndPassword(auth,el("email").value.trim(),el("password").value);
+  el("loginMsg").textContent="";
+ }catch(e){
+  el("loginMsg").textContent="تعذّر الدخول، تأكد من البريد وكلمة المرور";
  }
- el.innerHTML="";
- orders.forEach(o=>{
-  const row=document.createElement("div");
-  row.className="order";
-  const info=document.createElement("div");
-  const number=document.createElement("strong");
-  number.textContent="#"+o.number;
-  const badge=document.createElement("span");
-  badge.className="badge"+(o.status==="ready"?" done":"");
-  badge.textContent=o.status==="ready"?"جاهز":"قيد التحضير";
-  info.append(number,document.createElement("br"),badge);
+};
 
-  const btn=document.createElement("button");
-  btn.className=o.status==="ready"?"secondary":"ready";
-  btn.textContent=o.status==="ready"?"تم التجهيز":"✓ الطلب جاهز";
-  btn.disabled=o.status==="ready";
-  btn.onclick=()=>markReady(o.number);
-  row.append(info,btn);
-  el.appendChild(row);
+window.logout=()=>signOut(auth);
+
+onAuthStateChanged(auth,user=>{
+ el("loginCard").classList.toggle("hidden",!!user);
+ el("staffPanel").classList.toggle("hidden",!user);
+ if(stopOrders){stopOrders();stopOrders=null;}
+ if(user){
+  stopOrders=onSnapshot(query(ordersRef,orderBy("createdAt","desc")),snapshot=>{
+   const box=el("orders");
+   box.replaceChildren();
+   if(snapshot.empty){box.textContent="ما فيه طلبات حتى الآن";return;}
+   snapshot.forEach(item=>{
+    const data=item.data();
+    const row=document.createElement("div");
+    row.className="order";
+    const title=document.createElement("div");
+    title.textContent="طلب رقم "+(data.number||item.id.slice(0,6));
+    title.className="number";
+    row.appendChild(title);
+    const status=document.createElement("div");
+    status.className="status"+(data.status==="ready"?" done":"");
+    status.textContent=data.status==="ready"?"✅ جاهز للاستلام":"⏳ قيد التحضير";
+    row.appendChild(status);
+    if(data.status!=="ready"){
+     const btn=document.createElement("button");
+     btn.className="ready";
+     btn.textContent="الطلب جاهز";
+     btn.onclick=()=>markReady(item.id);
+     row.appendChild(btn);
+    }
+    box.appendChild(row);
+   });
+  },()=>el("orders").textContent="تعذّر تحميل الطلبات. راجع صلاحيات قاعدة البيانات.");
+ }
+});
+
+window.newOrder=async function(){
+ if(!auth.currentUser)return;
+ try{
+  const number=String(Date.now()).slice(-6);
+  const result=await addDoc(ordersRef,{
+   number,
+   status:"preparing",
+   createdAt:serverTimestamp(),
+   owner:auth.currentUser.uid
+  });
+  const url=new URL(location.href);
+  url.search="?order="+encodeURIComponent(result.id);
+  el("newOrderCard").classList.remove("hidden");
+  el("newNumber").textContent=number;
+  el("orderLink").href=url.href;
+  el("qr").src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data="+encodeURIComponent(url.href);
+ }catch(e){alert("تعذّر إنشاء الطلب. تأكد من قواعد Firestore.");}
+};
+
+async function markReady(id){
+ try{await updateDoc(doc(db,"orders",id),{status:"ready"});}
+ catch(e){alert("تعذّر تحديث الطلب.");}
+}
+
+function watchCustomer(id){
+ el("customerOrder").textContent="جارٍ تحميل الطلب...";
+ stopCustomer=onSnapshot(doc(db,"orders",id),snapshot=>{
+  const box=el("customerOrder");
+  box.replaceChildren();
+  if(!snapshot.exists()){
+   box.textContent="الطلب غير موجود أو انتهت صلاحيته";
+   return;
+  }
+  const data=snapshot.data();
+  const title=document.createElement("div");
+  title.className="number";
+  title.textContent="رقم "+data.number;
+  const status=document.createElement("div");
+  status.className="status"+(data.status==="ready"?" done":"");
+  status.textContent=data.status==="ready"?"✅ طلبك جاهز للاستلام!":"☕ طلبك قيد التحضير";
+  box.append(title,status);
+  const note=document.createElement("p");
+  note.className="small";
+  note.textContent="تتحدث الحالة تلقائيًا ما دامت الصفحة مفتوحة";
+  box.appendChild(note);
+ },()=>{
+  el("customerOrder").textContent="تعذّر عرض الطلب. راجع اتصال الإنترنت وصلاحيات القراءة.";
  });
 }
 
-function markReady(number){
- const o=orders.find(x=>x.number===number);
- if(!o)return;
- o.status="ready";
- save();
- renderOrders();
- if(currentCustomer===number)renderCustomer(number);
-}
-
-function searchOrder(){
- const number=Number(document.getElementById("searchNumber").value);
- if(!Number.isInteger(number)||number<=0){
-  alert("أدخل رقم طلب صحيح");
-  return;
- }
- currentCustomer=number;
- renderCustomer(number);
-}
-
-function renderCustomer(number){
- const el=document.getElementById("customerResult");
- const o=orders.find(x=>x.number===number);
- if(!o){
-  el.innerHTML='<div class="card center">الطلب غير موجود على هذا الجهاز في النسخة التجريبية.</div>';
-  return;
- }
- const ready=o.status==="ready";
- el.innerHTML="";
- const card=document.createElement("div");
- card.className="card center";
- const heading=document.createElement("h2");
- heading.textContent="طلب رقم #"+number;
- const status=document.createElement("div");
- status.className="status"+(ready?" done":"");
- status.innerHTML=ready
-  ?"<h2>🎉 طلبك جاهز!</h2><p>تفضل للاستلام من الكاونتر ☕</p>"
-  :"<h2>☕ جاري تحضير طلبك</h2><p>انتظر قليلًا، سيتم تحديث الحالة تلقائيًا</p>";
- card.append(heading,status);
- el.appendChild(card);
-
- if(lastStatus==="preparing"&&ready){
-  if(navigator.vibrate)navigator.vibrate([200,100,200]);
- }
- lastStatus=o.status;
-}
-
-function refresh(){
- try{
-  orders=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
-  renderOrders();
-  if(currentCustomer!==null)renderCustomer(currentCustomer);
- }catch(e){}
-}
-
-window.addEventListener("storage",refresh);
-setInterval(refresh,1500);
-renderOrders();
-
-const params=new URLSearchParams(location.search);
-const fromQR=Number(params.get("order"));
-if(Number.isInteger(fromQR)&&fromQR>0){
- document.getElementById("searchNumber").value=fromQR;
- currentCustomer=fromQR;
- showTab("customer");
- renderCustomer(fromQR);
+if(orderId){
+ el("tabs").classList.add("hidden");
+ showPage("customer");
+ watchCustomer(orderId);
+}else{
+ showPage("staff");
 }
 </script>
 </body>
