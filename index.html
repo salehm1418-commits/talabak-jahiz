@@ -18,47 +18,35 @@ label{display:block;margin:12px 0 6px}
 input{width:100%;padding:13px;border-radius:9px;background:#15100c;border:1px solid #795b3f;color:white;font:inherit}
 button{background:#d5a36b;color:#23160b;border:0;border-radius:9px;padding:12px 16px;font:inherit;font-weight:bold;cursor:pointer}
 button.secondary{background:#534030;color:white}
-button.danger{background:#853b3b;color:white}
 button:disabled{opacity:.5}
 .buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
 .hide{display:none!important}
 .msg{color:#ffd39b;white-space:pre-wrap}
 .good{color:#aee8b0}
 .order{border-top:1px solid #5a4430;padding:15px 0}
-.big{text-align:center;font-size:28px;color:#f4ca94;font-weight:bold}
 a{color:#f4ca94;overflow-wrap:anywhere}
 #qr{display:block;margin:15px auto;max-width:100%;background:white;padding:12px;border-radius:12px}
-.tabs{display:flex;gap:8px;margin-bottom:15px}
-.tabs button{flex:1}
-small{color:#c7b6a4}
 </style>
 </head>
 <body>
 
 <header>
 <h1>طلبك جاهز ☕</h1>
-<p>نظام إدارة وانتظار طلبات الكافيهات</p>
+<p>حساب الكافيه وإدارة الطلبات</p>
 </header>
 
 <main>
 
-<div class="tabs">
-<button id="homeTab">حساب الكافيه</button>
-<button id="orderTab" class="secondary">متابعة طلب</button>
-</div>
-
-<div id="home">
-
 <section id="loginSection" class="card">
 <h2>تسجيل الدخول أو إنشاء حساب</h2>
 
-<label>البريد الإلكتروني</label>
+<label for="email">البريد الإلكتروني</label>
 <input id="email" type="email" placeholder="example@gmail.com">
 
-<label>كلمة المرور</label>
+<label for="password">كلمة المرور</label>
 <input id="password" type="password" placeholder="6 أحرف على الأقل">
 
-<label>اسم الكافيه (للتسجيل الجديد فقط)</label>
+<label for="cafeName">اسم الكافيه (للتسجيل الجديد فقط)</label>
 <input id="cafeName" placeholder="اسم الكافيه">
 
 <div class="buttons">
@@ -82,8 +70,8 @@ small{color:#c7b6a4}
 <section id="ordersSection" class="card hide">
 <h2>إدارة الطلبات</h2>
 
-<label>رقم الطلب</label>
-<input id="orderNumber" placeholder="مثلاً 25">
+<label for="orderNumber">رقم الطلب</label>
+<input id="orderNumber" placeholder="مثلاً 101">
 
 <div class="buttons">
 <button id="createOrderBtn">إنشاء طلب</button>
@@ -93,8 +81,8 @@ small{color:#c7b6a4}
 
 <div id="newOrder" class="hide">
 <h3>رمز متابعة الطلب</h3>
-<img id="qr" alt="QR">
-<a id="orderLink" target="_blank"></a>
+<img id="qr" alt="رمز QR">
+<a id="orderLink" target="_blank" rel="noopener noreferrer"></a>
 <div class="buttons">
 <button id="shareBtn" class="secondary">مشاركة الرابط</button>
 </div>
@@ -102,29 +90,6 @@ small{color:#c7b6a4}
 
 <h3>الطلبات الأخيرة</h3>
 <div id="ordersList"></div>
-</section>
-
-<section id="adminSection" class="card hide">
-<h2>لوحة مالك المنصة 👑</h2>
-<p class="muted">من هنا تفعّل اشتراكات الكافيهات وتوقفها.</p>
-<div id="cafesList"></div>
-<p id="adminMsg" class="msg"></p>
-</section>
-
-</div>
-
-<section id="customerSection" class="card hide">
-<h2>متابعة طلبك ☕</h2>
-
-<div id="customerContent">
-<label>رابط الطلب أو رقم التعريف</label>
-<input id="lookupInput" placeholder="الصق رابط الطلب">
-<div class="buttons">
-<button id="lookupBtn">متابعة</button>
-</div>
-</div>
-
-<p id="customerMsg" class="msg"></p>
 </section>
 
 </main>
@@ -154,12 +119,11 @@ query,
 where,
 onSnapshot,
 serverTimestamp,
-Timestamp,
 writeBatch
 } from
 "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
 authDomain:"talabak-jahiz-ba884.firebaseapp.com",
 projectId:"talabak-jahiz-ba884",
@@ -170,6 +134,9 @@ measurementId:"G-JK18QQ6XMP"
 };
 
 const ADMIN_UID="Jbx8OGTp1LfLW1pDhwpyGeEY6oS2";
+
+const PUBLIC_SITE_URL=
+"https://timely-froyo-678b8c.netlify.app/";
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
@@ -183,13 +150,7 @@ let user=null;
 let cafe=null;
 let cafeListener=null;
 let ordersListener=null;
-let adminListener=null;
-let customerListener=null;
 let currentLink="";
-
-function isAdmin(){
-return user?.uid===ADMIN_UID;
-}
 
 function escapeHtml(value){
 return String(value??"").replace(/[&<>"']/g,c=>({
@@ -206,8 +167,8 @@ const errors={
 "auth/email-already-in-use":"البريد مستخدم مسبقاً",
 "auth/invalid-credential":"البريد أو كلمة المرور غير صحيحة",
 "auth/weak-password":"كلمة المرور ضعيفة",
-"auth/unauthorized-domain":"يجب إضافة نطاق الموقع إلى Firebase Authentication",
-"permission-denied":"لا توجد صلاحية. تأكد من قواعد Firebase"
+"auth/unauthorized-domain":"نطاق الموقع غير مصرح به",
+"permission-denied":"لا توجد صلاحية في Firebase"
 };
 return errors[e.code]||e.message||"حدث خطأ";
 }
@@ -215,23 +176,9 @@ return errors[e.code]||e.message||"حدث خطأ";
 function clearListeners(){
 cafeListener?.();
 ordersListener?.();
-adminListener?.();
-customerListener?.();
 cafeListener=null;
 ordersListener=null;
-adminListener=null;
-customerListener=null;
 }
-
-function switchPage(customer){
-show("home",!customer);
-show("customerSection",customer);
-$("homeTab").classList.toggle("secondary",customer);
-$("orderTab").classList.toggle("secondary",!customer);
-}
-
-$("homeTab").onclick=()=>switchPage(false);
-$("orderTab").onclick=()=>switchPage(true);
 
 $("registerBtn").onclick=async()=>{
 const email=$("email").value.trim().toLowerCase();
@@ -274,9 +221,7 @@ createdAt:serverTimestamp()
 });
 
 await batch.commit();
-
-message("loginMsg","تم إنشاء حسابك بنجاح");
-await loadAccount(result.user);
+message("loginMsg","تم إنشاء الحساب بنجاح");
 
 }catch(e){
 message("loginMsg",errorText(e));
@@ -286,12 +231,15 @@ message("loginMsg",errorText(e));
 $("loginBtn").onclick=async()=>{
 try{
 message("loginMsg","جاري تسجيل الدخول...");
+
 await signInWithEmailAndPassword(
 auth,
 $("email").value.trim(),
 $("password").value
 );
+
 message("loginMsg","");
+
 }catch(e){
 message("loginMsg",errorText(e));
 }
@@ -307,7 +255,6 @@ cafe=null;
 show("loginSection",!u);
 show("accountSection",!!u);
 show("ordersSection",false);
-show("adminSection",false);
 
 if(u){
 await loadAccount(u);
@@ -318,22 +265,23 @@ async function loadAccount(u){
 if(auth.currentUser?.uid!==u.uid)return;
 
 $("accountEmail").textContent=u.email||"";
+message("accountMsg","");
 
-if(isAdmin()){
-$("accountTitle").textContent="مالك منصة طلبك جاهز";
-$("subscriptionInfo").innerHTML=
-'<p class="good">حساب إدارة المنصة 👑</p>';
-show("adminSection",true);
-watchAdmin();
+if(u.uid===ADMIN_UID){
+location.replace("admin.html");
 return;
 }
 
 try{
-const profile=await getDoc(doc(db,"users",u.uid));
+const profile=await getDoc(
+doc(db,"users",u.uid)
+);
 
 if(!profile.exists()){
-message("accountMsg",
-"حسابك غير مربوط بكافيه. تواصل مع إدارة المنصة.");
+message(
+"accountMsg",
+"حسابك غير مربوط بكافيه. تواصل مع إدارة المنصة."
+);
 return;
 }
 
@@ -366,9 +314,7 @@ if(!cafe)return;
 
 $("accountTitle").textContent=cafe.name;
 
-const active=subscriptionActive();
-
-if(active){
+if(subscriptionActive()){
 const date=cafe.subscriptionEndsAt.toDate()
 .toLocaleDateString("ar-SA");
 
@@ -412,13 +358,17 @@ $("ordersList").innerHTML=orders.slice(0,35)
 <div class="order">
 <strong>طلب ${escapeHtml(o.number)}</strong>
 <p>الحالة: ${escapeHtml(o.status)}</p>
+
 <div class="buttons">
 <button data-id="${o.id}" data-status="preparing"
 class="secondary">قيد التجهيز</button>
+
 <button data-id="${o.id}" data-status="ready">
 جاهز ✅</button>
+
 <button data-id="${o.id}" data-status="delivered"
 class="secondary">تم التسليم</button>
+
 <button data-link="${o.id}" class="secondary">
 رابط العميل</button>
 </div>
@@ -499,9 +449,8 @@ message("orderMsg",errorText(e));
 };
 
 function orderUrl(id){
-const url=new URL(location.href);
-url.search="?order="+encodeURIComponent(id);
-url.hash="";
+const url=new URL("order.html",PUBLIC_SITE_URL);
+url.searchParams.set("id",id);
 return url.toString();
 }
 
@@ -524,133 +473,6 @@ prompt("انسخ الرابط",link);
 }
 
 $("shareBtn").onclick=()=>shareLink(currentLink);
-
-function watchAdmin(){
-if(adminListener)return;
-
-adminListener=onSnapshot(
-collection(db,"cafes"),
-snapshot=>{
-$("cafesList").innerHTML=snapshot.docs.map(d=>{
-const c=d.data();
-const expiry=c.subscriptionEndsAt?.toDate?.()
-.toLocaleDateString("ar-SA")||"—";
-
-return `
-<div class="order">
-<h3>${escapeHtml(c.name)}</h3>
-<p>الحالة: ${escapeHtml(c.subscriptionStatus)}</p>
-<p>انتهاء الاشتراك: ${escapeHtml(expiry)}</p>
-<div class="buttons">
-<button data-id="${d.id}" data-days="30">
-تفعيل 30 يوم
-</button>
-<button data-id="${d.id}" data-days="90"
-class="secondary">
-تفعيل 90 يوم
-</button>
-<button data-id="${d.id}" data-days="0"
-class="danger">
-إيقاف الاشتراك
-</button>
-</div>
-</div>
-`;
-}).join("")||"ما فيه كافيهات مسجلة";
-
-$("cafesList").querySelectorAll(
-"button[data-days]"
-).forEach(button=>{
-button.onclick=async()=>{
-try{
-const days=Number(button.dataset.days);
-
-await updateDoc(
-doc(db,"cafes",button.dataset.id),
-{
-subscriptionStatus:days?"active":"suspended",
-subscriptionEndsAt:Timestamp.fromMillis(
-Date.now()+days*86400000
-)
-}
-);
-
-message("adminMsg","تم تحديث الاشتراك بنجاح");
-
-}catch(e){
-message("adminMsg",errorText(e));
-}
-};
-});
-
-},
-e=>message("adminMsg",errorText(e))
-);
-}
-
-function followOrder(id){
-customerListener?.();
-switchPage(true);
-
-$("customerContent").innerHTML=
-'<p>جاري تحميل الطلب...</p>';
-
-customerListener=onSnapshot(
-doc(db,"orders",id),
-snapshot=>{
-if(!snapshot.exists()){
-message("customerMsg","الطلب غير موجود");
-return;
-}
-
-const o=snapshot.data();
-
-const statuses={
-received:"تم استلام الطلب 🧾",
-preparing:"جاري تجهيز طلبك ☕",
-ready:"طلبك جاهز للاستلام ✅",
-delivered:"تم تسليم الطلب 🎉"
-};
-
-$("customerContent").innerHTML=`
-<p class="muted">${escapeHtml(o.cafeName)}</p>
-<p class="big">طلب رقم ${escapeHtml(o.number)}</p>
-<p class="big">${escapeHtml(statuses[o.status]||o.status)}</p>
-<p class="muted">
-تتحدث حالة الطلب تلقائياً ما دامت الصفحة مفتوحة.
-</p>
-`;
-
-message("customerMsg","");
-},
-e=>message("customerMsg",errorText(e))
-);
-}
-
-$("lookupBtn").onclick=()=>{
-let id=$("lookupInput").value.trim();
-
-try{
-if(id.includes("://")){
-id=new URL(id).searchParams.get("order")||"";
-}
-}catch(e){}
-
-if(!/^[0-9a-f-]{36}$/i.test(id)){
-message("customerMsg","أدخل رابط طلب صحيح");
-return;
-}
-
-followOrder(id);
-};
-
-const orderId=new URLSearchParams(
-location.search
-).get("order");
-
-if(orderId){
-followOrder(orderId);
-}
 
 </script>
 </body>
