@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بطاقتي | طلبك جاهز</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f6f2ed;color:#382719;font-family:Tahoma,Arial,sans-serif;padding:24px}
+main{max-width:420px;margin:35px auto}
+h1{text-align:center;font-size:25px}
+.card{background:linear-gradient(145deg,#79533b,#42291d);color:white;border-radius:22px;padding:25px;box-shadow:0 12px 30px #0002}
+.brand{font-size:21px;font-weight:bold}
+.small{font-size:13px;color:#e7cdbb;margin-top:18px}
+.number{font-size:48px;font-weight:bold;margin:8px 0}
+.status{background:#ffffff25;border-radius:12px;padding:14px;margin-top:15px}
+button{width:100%;border:0;border-radius:13px;padding:16px;margin-top:14px;background:#382719;color:white;font-size:16px;font-weight:bold}
+.secondary{background:#e5d7c8;color:#382719}
+.note{text-align:center;color:#806d5d;font-size:13px;line-height:1.8}
+</style>
+</head>
+<body>
+<main>
+<h1>طلبك جاهز ☕</h1>
+<div class="card">
+<div class="brand">☕ كافيه التجربة</div>
+<div class="small">رقم طلبك الحالي</div>
+<div class="number" id="number">105</div>
+<div class="small">حالة الطلب</div>
+<div class="status" id="status">⏳ قيد التحضير</div>
+</div>
+<button onclick="newOrder()">تجربة طلب جديد</button>
+<button class="secondary" onclick="ready()">تجربة الطلب جاهز</button>
+<p class="note">هذه بطاقة تجريبية داخل الموقع.<br>لا ترسل إشعارات ولا تضيف بطاقة إلى Apple Wallet بعد.</p>
+</main>
+<script>
+let number=105;
+function newOrder(){
+ number++;
+ document.getElementById("number").textContent=number;
+ document.getElementById("status").textContent="⏳ قيد التحضير";
+}
+function ready(){
+ document.getElementById("status").textContent="✅ طلبك جاهز للاستلام";
+}
+</script>
+</body>
+</html>
