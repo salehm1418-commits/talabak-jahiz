@@ -4,221 +4,654 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#15100c">
 <title>طلبك جاهز ☕</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#15100c;color:#fff;font-family:Tahoma,Arial,sans-serif}
-header{text-align:center;padding:26px 12px;background:#241b15}
-h1{color:#e8bd83;margin:0 0 8px}
-header p{color:#c4b4a3;font-size:14px}
-main{max-width:650px;margin:auto;padding:18px}
-.tabs{display:flex;gap:10px;margin-bottom:20px}
-button,input{font:inherit}
-button{cursor:pointer;border:0;border-radius:12px;padding:13px}
-.tabs button{flex:1;background:#35271e;color:#fff}
-.tabs button.active{background:#c99558;color:#17100b;font-weight:bold}
-.card{background:#241b15;border:1px solid #4c3728;border-radius:18px;padding:20px;margin-bottom:16px}
-h2{color:#e8bd83;font-size:20px;margin-top:0}
-input{width:100%;padding:13px;border:1px solid #765b43;border-radius:10px;background:#17110e;color:white;margin:8px 0}
-.primary{background:#c99558;color:#17100b;font-weight:bold;width:100%}
-.ready{background:#33875a;color:white}
-.small{font-size:13px;color:#c4b4a3}
-.order{border-top:1px solid #554031;padding:15px 0}
-.number{font-size:32px;font-weight:bold;color:#e8bd83}
-.status{padding:12px;border-radius:10px;background:#44321f;margin:12px 0}
-.done{background:#174d32;color:#b8f3ce}
-#qr{display:block;margin:20px auto;max-width:220px;width:100%;background:white;padding:10px;border-radius:12px}
-a{color:#e8bd83}
-.hidden{display:none}
-.error{color:#ffb1a6}
+body{margin:0;background:#15100c;color:#fff;font-family:system-ui,Tahoma,sans-serif}
+header{text-align:center;background:#241b15;padding:25px 15px;border-bottom:1px solid #58402d}
+h1,h2,h3{color:#eac08a}
+h1{margin:0}
+header p,.muted{color:#c7b6a4}
+main{max-width:800px;margin:auto;padding:18px}
+.card{background:#241b15;border:1px solid #59422f;border-radius:16px;padding:20px;margin-bottom:15px}
+label{display:block;margin:12px 0 6px}
+input{width:100%;padding:13px;border-radius:9px;background:#15100c;border:1px solid #795b3f;color:white;font:inherit}
+button{background:#d5a36b;color:#23160b;border:0;border-radius:9px;padding:12px 16px;font:inherit;font-weight:bold;cursor:pointer}
+button.secondary{background:#534030;color:white}
+button.danger{background:#853b3b;color:white}
+button:disabled{opacity:.5}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.hide{display:none!important}
+.msg{color:#ffd39b;white-space:pre-wrap}
+.good{color:#aee8b0}
+.order{border-top:1px solid #5a4430;padding:15px 0}
+.big{text-align:center;font-size:28px;color:#f4ca94;font-weight:bold}
+a{color:#f4ca94;overflow-wrap:anywhere}
+#qr{display:block;margin:15px auto;max-width:100%;background:white;padding:12px;border-radius:12px}
+.tabs{display:flex;gap:8px;margin-bottom:15px}
+.tabs button{flex:1}
+small{color:#c7b6a4}
 </style>
 </head>
 <body>
+
 <header>
 <h1>طلبك جاهز ☕</h1>
-<p>تابع طلبك بكل سهولة ومن دون تسجيل</p>
+<p>نظام إدارة وانتظار طلبات الكافيهات</p>
 </header>
+
 <main>
-<div class="tabs" id="tabs">
-<button id="staffTab" onclick="showPage('staff')">لوحة الكافيه</button>
-<button id="customerTab" onclick="showPage('customer')">صفحة العميل</button>
+
+<div class="tabs">
+<button id="homeTab">حساب الكافيه</button>
+<button id="orderTab" class="secondary">متابعة طلب</button>
 </div>
 
-<section id="staff" class="hidden">
-<div class="card" id="loginCard">
-<h2>دخول الموظف</h2>
-<input id="email" type="email" placeholder="البريد الإلكتروني">
-<input id="password" type="password" placeholder="كلمة المرور">
-<button class="primary" onclick="login()">دخول</button>
-<p id="loginMsg" class="small"></p>
+<div id="home">
+
+<section id="loginSection" class="card">
+<h2>تسجيل الدخول أو إنشاء حساب</h2>
+
+<label>البريد الإلكتروني</label>
+<input id="email" type="email" placeholder="example@gmail.com">
+
+<label>كلمة المرور</label>
+<input id="password" type="password" placeholder="6 أحرف على الأقل">
+
+<label>اسم الكافيه (للتسجيل الجديد فقط)</label>
+<input id="cafeName" placeholder="اسم الكافيه">
+
+<div class="buttons">
+<button id="loginBtn">دخول</button>
+<button id="registerBtn" class="secondary">تسجيل كافيه جديد</button>
 </div>
 
-<div id="staffPanel" class="hidden">
-<div class="card">
+<p id="loginMsg" class="msg"></p>
+</section>
+
+<section id="accountSection" class="card hide">
+<h2 id="accountTitle">حسابي</h2>
+<p id="accountEmail" class="muted"></p>
+<div id="subscriptionInfo"></div>
+<div class="buttons">
+<button id="logoutBtn" class="secondary">تسجيل الخروج</button>
+</div>
+<p id="accountMsg" class="msg"></p>
+</section>
+
+<section id="ordersSection" class="card hide">
 <h2>إدارة الطلبات</h2>
-<button class="primary" onclick="newOrder()">+ إنشاء طلب جديد</button>
-<p class="small">يظهر رمز QR بعد إنشاء الطلب</p>
-<button onclick="logout()">تسجيل الخروج</button>
+
+<label>رقم الطلب</label>
+<input id="orderNumber" placeholder="مثلاً 25">
+
+<div class="buttons">
+<button id="createOrderBtn">إنشاء طلب</button>
 </div>
-<div class="card hidden" id="newOrderCard">
-<h2>رمز الطلب الجديد</h2>
-<div class="number" id="newNumber"></div>
-<img id="qr" alt="رمز QR للطلب">
-<p class="small">العميل يصوّر الرمز ويفتح صفحة طلبه مباشرة</p>
-<a id="orderLink" target="_blank">فتح رابط الطلب</a>
+
+<p id="orderMsg" class="msg"></p>
+
+<div id="newOrder" class="hide">
+<h3>رمز متابعة الطلب</h3>
+<img id="qr" alt="QR">
+<a id="orderLink" target="_blank"></a>
+<div class="buttons">
+<button id="shareBtn" class="secondary">مشاركة الرابط</button>
 </div>
-<div class="card">
-<h2>الطلبات</h2>
-<div id="orders">جارٍ التحميل...</div>
 </div>
-</div>
+
+<h3>الطلبات الأخيرة</h3>
+<div id="ordersList"></div>
 </section>
 
-<section id="customer" class="hidden">
-<div class="card">
-<h2>متابعة طلبك</h2>
-<div id="customerOrder"></div>
-</div>
+<section id="adminSection" class="card hide">
+<h2>لوحة مالك المنصة 👑</h2>
+<p class="muted">من هنا تفعّل اشتراكات الكافيهات وتوقفها.</p>
+<div id="cafesList"></div>
+<p id="adminMsg" class="msg"></p>
 </section>
+
+</div>
+
+<section id="customerSection" class="card hide">
+<h2>متابعة طلبك ☕</h2>
+
+<div id="customerContent">
+<label>رابط الطلب أو رقم التعريف</label>
+<input id="lookupInput" placeholder="الصق رابط الطلب">
+<div class="buttons">
+<button id="lookupBtn">متابعة</button>
+</div>
+</div>
+
+<p id="customerMsg" class="msg"></p>
+</section>
+
 </main>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-import {getFirestore,collection,doc,addDoc,getDoc,updateDoc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
-import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
 
-const firebaseConfig={
- apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
- authDomain:"talabak-jahiz-ba884.firebaseapp.com",
- projectId:"talabak-jahiz-ba884",
- storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
- messagingSenderId:"328520935117",
- appId:"1:328520935117:web:96c8d056b218855735ab84",
- measurementId:"G-JK18QQ6XMP"
+import {initializeApp} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged,
+signInWithEmailAndPassword,
+createUserWithEmailAndPassword,
+signOut
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+import {
+getFirestore,
+doc,
+getDoc,
+setDoc,
+updateDoc,
+collection,
+query,
+where,
+onSnapshot,
+serverTimestamp,
+Timestamp,
+writeBatch
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+projectId:"talabak-jahiz-ba884",
+storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+messagingSenderId:"328520935117",
+appId:"1:328520935117:web:96c8d056b218855735ab84",
+measurementId:"G-JK18QQ6XMP"
 };
+
+const ADMIN_UID="Jbx8OGTp1LfLW1pDhwpyGeEY6oS2";
 
 const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
 const auth=getAuth(app);
-const ordersRef=collection(db,"orders");
-let stopOrders=null;
-let stopCustomer=null;
+const db=getFirestore(app);
 
-const el=id=>document.getElementById(id);
-const params=new URLSearchParams(location.search);
-const orderId=params.get("order");
+const $=id=>document.getElementById(id);
+const show=(id,yes)=>$(id).classList.toggle("hide",!yes);
+const message=(id,text)=>$(id).textContent=text||"";
 
-window.showPage=function(page){
- el("staff").classList.toggle("hidden",page!=="staff");
- el("customer").classList.toggle("hidden",page!=="customer");
- el("staffTab").classList.toggle("active",page==="staff");
- el("customerTab").classList.toggle("active",page==="customer");
+let user=null;
+let cafe=null;
+let cafeListener=null;
+let ordersListener=null;
+let adminListener=null;
+let customerListener=null;
+let currentLink="";
+
+function isAdmin(){
+return user?.uid===ADMIN_UID;
+}
+
+function escapeHtml(value){
+return String(value??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+}
+
+function errorText(e){
+const errors={
+"auth/email-already-in-use":"البريد مستخدم مسبقاً",
+"auth/invalid-credential":"البريد أو كلمة المرور غير صحيحة",
+"auth/weak-password":"كلمة المرور ضعيفة",
+"auth/unauthorized-domain":"يجب إضافة نطاق الموقع إلى Firebase Authentication",
+"permission-denied":"لا توجد صلاحية. تأكد من قواعد Firebase"
 };
+return errors[e.code]||e.message||"حدث خطأ";
+}
 
-window.login=async function(){
- try{
-  el("loginMsg").textContent="جارٍ الدخول...";
-  await signInWithEmailAndPassword(auth,el("email").value.trim(),el("password").value);
-  el("loginMsg").textContent="";
- }catch(e){
-  el("loginMsg").textContent="تعذّر الدخول، تأكد من البريد وكلمة المرور";
- }
-};
+function clearListeners(){
+cafeListener?.();
+ordersListener?.();
+adminListener?.();
+customerListener?.();
+cafeListener=null;
+ordersListener=null;
+adminListener=null;
+customerListener=null;
+}
 
-window.logout=()=>signOut(auth);
+function switchPage(customer){
+show("home",!customer);
+show("customerSection",customer);
+$("homeTab").classList.toggle("secondary",customer);
+$("orderTab").classList.toggle("secondary",!customer);
+}
 
-onAuthStateChanged(auth,user=>{
- el("loginCard").classList.toggle("hidden",!!user);
- el("staffPanel").classList.toggle("hidden",!user);
- if(stopOrders){stopOrders();stopOrders=null;}
- if(user){
-  stopOrders=onSnapshot(query(ordersRef,orderBy("createdAt","desc")),snapshot=>{
-   const box=el("orders");
-   box.replaceChildren();
-   if(snapshot.empty){box.textContent="ما فيه طلبات حتى الآن";return;}
-   snapshot.forEach(item=>{
-    const data=item.data();
-    const row=document.createElement("div");
-    row.className="order";
-    const title=document.createElement("div");
-    title.textContent="طلب رقم "+(data.number||item.id.slice(0,6));
-    title.className="number";
-    row.appendChild(title);
-    const status=document.createElement("div");
-    status.className="status"+(data.status==="ready"?" done":"");
-    status.textContent=data.status==="ready"?"✅ جاهز للاستلام":"⏳ قيد التحضير";
-    row.appendChild(status);
-    if(data.status!=="ready"){
-     const btn=document.createElement("button");
-     btn.className="ready";
-     btn.textContent="الطلب جاهز";
-     btn.onclick=()=>markReady(item.id);
-     row.appendChild(btn);
-    }
-    box.appendChild(row);
-   });
-  },()=>el("orders").textContent="تعذّر تحميل الطلبات. راجع صلاحيات قاعدة البيانات.");
- }
+$("homeTab").onclick=()=>switchPage(false);
+$("orderTab").onclick=()=>switchPage(true);
+
+$("registerBtn").onclick=async()=>{
+const email=$("email").value.trim().toLowerCase();
+const password=$("password").value;
+const name=$("cafeName").value.trim();
+
+if(!name){
+message("loginMsg","اكتب اسم الكافيه");
+return;
+}
+
+if(!email||password.length<6){
+message("loginMsg","تأكد من البريد وكلمة المرور");
+return;
+}
+
+try{
+message("loginMsg","جاري إنشاء الحساب...");
+
+const result=await createUserWithEmailAndPassword(
+auth,email,password
+);
+
+const uid=result.user.uid;
+const batch=writeBatch(db);
+
+batch.set(doc(db,"users",uid),{
+email:result.user.email,
+role:"owner",
+cafeId:uid,
+createdAt:serverTimestamp()
 });
 
-window.newOrder=async function(){
- if(!auth.currentUser)return;
- try{
-  const number=String(Date.now()).slice(-6);
-  const result=await addDoc(ordersRef,{
-   number,
-   status:"preparing",
-   createdAt:serverTimestamp(),
-   owner:auth.currentUser.uid
-  });
-  const url=new URL(location.href);
-  url.search="?order="+encodeURIComponent(result.id);
-  el("newOrderCard").classList.remove("hidden");
-  el("newNumber").textContent=number;
-  el("orderLink").href=url.href;
-  el("qr").src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data="+encodeURIComponent(url.href);
- }catch(e){alert("تعذّر إنشاء الطلب. تأكد من قواعد Firestore.");}
+batch.set(doc(db,"cafes",uid),{
+name:name,
+ownerUid:uid,
+subscriptionStatus:"pending",
+subscriptionEndsAt:null,
+createdAt:serverTimestamp()
+});
+
+await batch.commit();
+
+message("loginMsg","تم إنشاء حسابك بنجاح");
+await loadAccount(result.user);
+
+}catch(e){
+message("loginMsg",errorText(e));
+}
 };
 
-async function markReady(id){
- try{await updateDoc(doc(db,"orders",id),{status:"ready"});}
- catch(e){alert("تعذّر تحديث الطلب.");}
+$("loginBtn").onclick=async()=>{
+try{
+message("loginMsg","جاري تسجيل الدخول...");
+await signInWithEmailAndPassword(
+auth,
+$("email").value.trim(),
+$("password").value
+);
+message("loginMsg","");
+}catch(e){
+message("loginMsg",errorText(e));
+}
+};
+
+$("logoutBtn").onclick=()=>signOut(auth);
+
+onAuthStateChanged(auth,async u=>{
+clearListeners();
+user=u;
+cafe=null;
+
+show("loginSection",!u);
+show("accountSection",!!u);
+show("ordersSection",false);
+show("adminSection",false);
+
+if(u){
+await loadAccount(u);
+}
+});
+
+async function loadAccount(u){
+if(auth.currentUser?.uid!==u.uid)return;
+
+$("accountEmail").textContent=u.email||"";
+
+if(isAdmin()){
+$("accountTitle").textContent="مالك منصة طلبك جاهز";
+$("subscriptionInfo").innerHTML=
+'<p class="good">حساب إدارة المنصة 👑</p>';
+show("adminSection",true);
+watchAdmin();
+return;
 }
 
-function watchCustomer(id){
- el("customerOrder").textContent="جارٍ تحميل الطلب...";
- stopCustomer=onSnapshot(doc(db,"orders",id),snapshot=>{
-  const box=el("customerOrder");
-  box.replaceChildren();
-  if(!snapshot.exists()){
-   box.textContent="الطلب غير موجود أو انتهت صلاحيته";
-   return;
-  }
-  const data=snapshot.data();
-  const title=document.createElement("div");
-  title.className="number";
-  title.textContent="رقم "+data.number;
-  const status=document.createElement("div");
-  status.className="status"+(data.status==="ready"?" done":"");
-  status.textContent=data.status==="ready"?"✅ طلبك جاهز للاستلام!":"☕ طلبك قيد التحضير";
-  box.append(title,status);
-  const note=document.createElement("p");
-  note.className="small";
-  note.textContent="تتحدث الحالة تلقائيًا ما دامت الصفحة مفتوحة";
-  box.appendChild(note);
- },()=>{
-  el("customerOrder").textContent="تعذّر عرض الطلب. راجع اتصال الإنترنت وصلاحيات القراءة.";
- });
+try{
+const profile=await getDoc(doc(db,"users",u.uid));
+
+if(!profile.exists()){
+message("accountMsg",
+"حسابك غير مربوط بكافيه. تواصل مع إدارة المنصة.");
+return;
 }
+
+const cafeId=profile.data().cafeId;
+
+cafeListener=onSnapshot(
+doc(db,"cafes",cafeId),
+snapshot=>{
+cafe=snapshot.exists()
+?{id:snapshot.id,...snapshot.data()}
+:null;
+
+renderCafe();
+},
+e=>message("accountMsg",errorText(e))
+);
+
+}catch(e){
+message("accountMsg",errorText(e));
+}
+}
+
+function subscriptionActive(){
+return cafe?.subscriptionStatus==="active"
+&& cafe.subscriptionEndsAt?.toMillis?.()>Date.now();
+}
+
+function renderCafe(){
+if(!cafe)return;
+
+$("accountTitle").textContent=cafe.name;
+
+const active=subscriptionActive();
+
+if(active){
+const date=cafe.subscriptionEndsAt.toDate()
+.toLocaleDateString("ar-SA");
+
+$("subscriptionInfo").innerHTML=
+`<p class="good">اشتراكك مفعّل حتى ${escapeHtml(date)} ✅</p>`;
+
+show("ordersSection",true);
+watchOrders();
+
+}else{
+$("subscriptionInfo").innerHTML=
+`<h3>اشتراكك بانتظار التفعيل أو منتهي</h3>
+<p>للاشتراك أو التجديد تواصل مع إدارة طلبك جاهز.</p>`;
+
+show("ordersSection",false);
+ordersListener?.();
+ordersListener=null;
+}
+}
+
+function watchOrders(){
+if(ordersListener||!cafe)return;
+
+ordersListener=onSnapshot(
+query(
+collection(db,"orders"),
+where("cafeId","==",cafe.id)
+),
+snapshot=>{
+const orders=snapshot.docs.map(d=>({
+id:d.id,...d.data()
+}));
+
+orders.sort((a,b)=>
+(b.createdAt?.toMillis?.()||0)-
+(a.createdAt?.toMillis?.()||0)
+);
+
+$("ordersList").innerHTML=orders.slice(0,35)
+.map(o=>`
+<div class="order">
+<strong>طلب ${escapeHtml(o.number)}</strong>
+<p>الحالة: ${escapeHtml(o.status)}</p>
+<div class="buttons">
+<button data-id="${o.id}" data-status="preparing"
+class="secondary">قيد التجهيز</button>
+<button data-id="${o.id}" data-status="ready">
+جاهز ✅</button>
+<button data-id="${o.id}" data-status="delivered"
+class="secondary">تم التسليم</button>
+<button data-link="${o.id}" class="secondary">
+رابط العميل</button>
+</div>
+</div>
+`).join("")||"لا توجد طلبات";
+
+$("ordersList").querySelectorAll(
+"button[data-status]"
+).forEach(button=>{
+button.onclick=async()=>{
+try{
+await updateDoc(
+doc(db,"orders",button.dataset.id),
+{
+status:button.dataset.status,
+updatedAt:serverTimestamp()
+}
+);
+}catch(e){
+message("orderMsg",errorText(e));
+}
+};
+});
+
+$("ordersList").querySelectorAll(
+"button[data-link]"
+).forEach(button=>{
+button.onclick=()=>{
+shareLink(orderUrl(button.dataset.link));
+};
+});
+
+},
+e=>message("orderMsg",errorText(e))
+);
+}
+
+$("createOrderBtn").onclick=async()=>{
+try{
+if(!subscriptionActive()){
+throw Error("اشتراك الكافيه غير مفعّل");
+}
+
+const number=$("orderNumber").value.trim();
+
+if(!number){
+throw Error("اكتب رقم الطلب");
+}
+
+const id=crypto.randomUUID();
+
+await setDoc(doc(db,"orders",id),{
+number:number,
+cafeId:cafe.id,
+cafeName:cafe.name,
+status:"received",
+createdBy:user.uid,
+createdAt:serverTimestamp(),
+updatedAt:serverTimestamp()
+});
+
+currentLink=orderUrl(id);
+
+$("orderLink").href=currentLink;
+$("orderLink").textContent=currentLink;
+
+$("qr").src=
+"https://api.qrserver.com/v1/create-qr-code/?size=230x230&data="
++encodeURIComponent(currentLink);
+
+show("newOrder",true);
+$("orderNumber").value="";
+message("orderMsg","تم إنشاء الطلب بنجاح");
+
+}catch(e){
+message("orderMsg",errorText(e));
+}
+};
+
+function orderUrl(id){
+const url=new URL(location.href);
+url.search="?order="+encodeURIComponent(id);
+url.hash="";
+return url.toString();
+}
+
+async function shareLink(link){
+try{
+if(navigator.share){
+await navigator.share({
+title:"متابعة طلبك",
+url:link
+});
+}else{
+await navigator.clipboard.writeText(link);
+alert("تم نسخ الرابط");
+}
+}catch(e){
+if(e.name!=="AbortError"){
+prompt("انسخ الرابط",link);
+}
+}
+}
+
+$("shareBtn").onclick=()=>shareLink(currentLink);
+
+function watchAdmin(){
+if(adminListener)return;
+
+adminListener=onSnapshot(
+collection(db,"cafes"),
+snapshot=>{
+$("cafesList").innerHTML=snapshot.docs.map(d=>{
+const c=d.data();
+const expiry=c.subscriptionEndsAt?.toDate?.()
+.toLocaleDateString("ar-SA")||"—";
+
+return `
+<div class="order">
+<h3>${escapeHtml(c.name)}</h3>
+<p>الحالة: ${escapeHtml(c.subscriptionStatus)}</p>
+<p>انتهاء الاشتراك: ${escapeHtml(expiry)}</p>
+<div class="buttons">
+<button data-id="${d.id}" data-days="30">
+تفعيل 30 يوم
+</button>
+<button data-id="${d.id}" data-days="90"
+class="secondary">
+تفعيل 90 يوم
+</button>
+<button data-id="${d.id}" data-days="0"
+class="danger">
+إيقاف الاشتراك
+</button>
+</div>
+</div>
+`;
+}).join("")||"ما فيه كافيهات مسجلة";
+
+$("cafesList").querySelectorAll(
+"button[data-days]"
+).forEach(button=>{
+button.onclick=async()=>{
+try{
+const days=Number(button.dataset.days);
+
+await updateDoc(
+doc(db,"cafes",button.dataset.id),
+{
+subscriptionStatus:days?"active":"suspended",
+subscriptionEndsAt:Timestamp.fromMillis(
+Date.now()+days*86400000
+)
+}
+);
+
+message("adminMsg","تم تحديث الاشتراك بنجاح");
+
+}catch(e){
+message("adminMsg",errorText(e));
+}
+};
+});
+
+},
+e=>message("adminMsg",errorText(e))
+);
+}
+
+function followOrder(id){
+customerListener?.();
+switchPage(true);
+
+$("customerContent").innerHTML=
+'<p>جاري تحميل الطلب...</p>';
+
+customerListener=onSnapshot(
+doc(db,"orders",id),
+snapshot=>{
+if(!snapshot.exists()){
+message("customerMsg","الطلب غير موجود");
+return;
+}
+
+const o=snapshot.data();
+
+const statuses={
+received:"تم استلام الطلب 🧾",
+preparing:"جاري تجهيز طلبك ☕",
+ready:"طلبك جاهز للاستلام ✅",
+delivered:"تم تسليم الطلب 🎉"
+};
+
+$("customerContent").innerHTML=`
+<p class="muted">${escapeHtml(o.cafeName)}</p>
+<p class="big">طلب رقم ${escapeHtml(o.number)}</p>
+<p class="big">${escapeHtml(statuses[o.status]||o.status)}</p>
+<p class="muted">
+تتحدث حالة الطلب تلقائياً ما دامت الصفحة مفتوحة.
+</p>
+`;
+
+message("customerMsg","");
+},
+e=>message("customerMsg",errorText(e))
+);
+}
+
+$("lookupBtn").onclick=()=>{
+let id=$("lookupInput").value.trim();
+
+try{
+if(id.includes("://")){
+id=new URL(id).searchParams.get("order")||"";
+}
+}catch(e){}
+
+if(!/^[0-9a-f-]{36}$/i.test(id)){
+message("customerMsg","أدخل رابط طلب صحيح");
+return;
+}
+
+followOrder(id);
+};
+
+const orderId=new URLSearchParams(
+location.search
+).get("order");
 
 if(orderId){
- el("tabs").classList.add("hidden");
- showPage("customer");
- watchCustomer(orderId);
-}else{
- showPage("staff");
+followOrder(orderId);
 }
+
 </script>
 </body>
 </html>
