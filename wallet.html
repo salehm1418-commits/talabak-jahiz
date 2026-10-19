@@ -3,46 +3,106 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>بطاقتي | طلبك جاهز</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f6f2ed;color:#382719;font-family:Tahoma,Arial,sans-serif;padding:24px}
+body{
+ margin:0;padding:24px;
+ background:#f6f2ed;color:#382719;
+ font-family:Tahoma,Arial,sans-serif
+}
 main{max-width:420px;margin:35px auto}
 h1{text-align:center;font-size:25px}
-.card{background:linear-gradient(145deg,#79533b,#42291d);color:white;border-radius:22px;padding:25px;box-shadow:0 12px 30px #0002}
+.card{
+ background:linear-gradient(145deg,#79533b,#42291d);
+ color:white;border-radius:22px;padding:25px;
+ box-shadow:0 12px 30px #0002
+}
 .brand{font-size:21px;font-weight:bold}
 .small{font-size:13px;color:#e7cdbb;margin-top:18px}
 .number{font-size:48px;font-weight:bold;margin:8px 0}
-.status{background:#ffffff25;border-radius:12px;padding:14px;margin-top:15px}
-button{width:100%;border:0;border-radius:13px;padding:16px;margin-top:14px;background:#382719;color:white;font-size:16px;font-weight:bold}
-.secondary{background:#e5d7c8;color:#382719}
-.note{text-align:center;color:#806d5d;font-size:13px;line-height:1.8}
+.status{
+ background:#ffffff25;border-radius:12px;
+ padding:14px;margin-top:15px
+}
+.note{
+ text-align:center;color:#806d5d;
+ font-size:13px;line-height:1.8
+}
+.error{color:#ad3030;text-align:center}
 </style>
 </head>
 <body>
 <main>
 <h1>طلبك جاهز ☕</h1>
 <div class="card">
-<div class="brand">☕ كافيه التجربة</div>
+<div class="brand" id="cafe">جاري تحميل الطلب...</div>
 <div class="small">رقم طلبك الحالي</div>
-<div class="number" id="number">105</div>
+<div class="number" id="number">—</div>
 <div class="small">حالة الطلب</div>
-<div class="status" id="status">⏳ قيد التحضير</div>
+<div class="status" id="status">⏳ جاري التحميل</div>
 </div>
-<button onclick="newOrder()">تجربة طلب جديد</button>
-<button class="secondary" onclick="ready()">تجربة الطلب جاهز</button>
-<p class="note">هذه بطاقة تجريبية داخل الموقع.<br>لا ترسل إشعارات ولا تضيف بطاقة إلى Apple Wallet بعد.</p>
+<p id="error" class="error"></p>
+<p class="note">
+تتحدث حالة الطلب تلقائيًا عند تغييرها من الكاشير.
+</p>
+<p class="note">
+هذه بطاقة ويب تجريبية وليست بطاقة Apple Wallet بعد.
+</p>
 </main>
-<script>
-let number=105;
-function newOrder(){
- number++;
- document.getElementById("number").textContent=number;
- document.getElementById("status").textContent="⏳ قيد التحضير";
-}
-function ready(){
- document.getElementById("status").textContent="✅ طلبك جاهز للاستلام";
+
+<script type="module">
+import {initializeApp} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {getFirestore,doc,onSnapshot} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+ authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+ projectId:"talabak-jahiz-ba884",
+ storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+ messagingSenderId:"328520935117",
+ appId:"1:328520935117:web:96c8d056b218855735ab84",
+ measurementId:"G-JK18QQ6XMP"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+
+const id=new URLSearchParams(location.search).get("id");
+
+const states={
+ received:"🧾 تم استلام الطلب",
+ preparing:"⏳ جاري تجهيز طلبك",
+ ready:"✅ طلبك جاهز للاستلام",
+ delivered:"🎉 تم تسليم الطلب"
+};
+
+if(!id||!/^[0-9a-f-]{36}$/i.test(id)){
+ $("cafe").textContent="طلبك جاهز ☕";
+ $("status").textContent="لا يوجد طلب";
+ $("error").textContent="افتح البطاقة من رابط الطلب الخاص بك";
+}else{
+ onSnapshot(doc(db,"orders",id),snapshot=>{
+  if(!snapshot.exists()){
+   $("cafe").textContent="طلبك جاهز ☕";
+   $("number").textContent="—";
+   $("status").textContent="الطلب غير موجود";
+   return;
+  }
+  const order=snapshot.data();
+  $("cafe").textContent=order.cafeName||"الكافيه";
+  $("number").textContent=order.number??"—";
+  $("status").textContent=states[order.status]||"حالة غير معروفة";
+  $("error").textContent="";
+ },()=>{
+  $("status").textContent="تعذر تحديث الطلب";
+  $("error").textContent="تحقق من الاتصال وحاول تحديث الصفحة";
+ });
 }
 </script>
 </body>
