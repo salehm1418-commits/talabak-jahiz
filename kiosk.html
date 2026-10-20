@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>متابعة فاتورتك | طلبك جاهز</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;
+ background:#f6f2ed;color:#382719;
+ font-family:Tahoma,Arial,sans-serif;
+ display:grid;place-items:center;padding:20px
+}
+main{width:100%;max-width:440px;text-align:center}
+h1{font-size:32px}
+.card{
+ background:white;border-radius:24px;
+ padding:30px 22px;box-shadow:0 12px 35px #0001
+}
+p{line-height:1.8;color:#79695c}
+input{
+ width:100%;padding:18px;font-size:27px;
+ border:2px solid #d8c8b9;border-radius:14px;
+ text-align:center;direction:ltr
+}
+button,.link{
+ display:block;width:100%;margin-top:15px;
+ padding:17px;border:0;border-radius:14px;
+ background:#654630;color:white;
+ font-size:19px;font-weight:bold;
+ text-decoration:none;cursor:pointer
+}
+#error{color:#ae3434}
+#result{margin-top:20px}
+small{color:#88786b}
+</style>
+</head>
+<body>
+<main>
+<h1>☕ طلبك جاهز</h1>
+<div class="card">
+<h2>تابع طلبك بسهولة</h2>
+<p>أدخل رقم الفاتورة الموجود على إيصالك</p>
+<form id="form">
+<input id="invoice" inputmode="numeric"
+placeholder="مثلاً 101" required maxlength="30">
+<button type="submit">متابعة الطلب</button>
+</form>
+<p id="error"></p>
+<div id="result" hidden>
+<p id="message"></p>
+<a id="link" class="link">افتح بطاقة طلبك</a>
+</div>
+</div>
+<p><small>تتحدث حالة طلبك تلقائياً عند تغييرها من الكافيه</small></p>
+</main>
+
+<script type="module">
+import {initializeApp} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+ getFirestore,collection,query,where,getDocs
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const app=initializeApp({
+ apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+ authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+ projectId:"talabak-jahiz-ba884",
+ storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+ messagingSenderId:"328520935117",
+ appId:"1:328520935117:web:96c8d056b218855735ab84"
+});
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+
+$("form").addEventListener("submit",async e=>{
+ e.preventDefault();
+ $("error").textContent="";
+ $("result").hidden=true;
+
+ const number=$("invoice").value.trim();
+ const cafeId=new URLSearchParams(location.search).get("cafe");
+
+ if(!cafeId){
+  $("error").textContent=
+   "هذه الشاشة تحتاج رابط الكافيه الخاص بها";
+  return;
+ }
+
+ const button=$("form").querySelector("button");
+ button.disabled=true;
+ button.textContent="جاري البحث...";
+
+ try{
+  const q=query(
+   collection(db,"orders"),
+   where("cafeId","==",cafeId),
+   where("number","==",number)
+  );
+  const results=await getDocs(q);
+
+  if(results.empty){
+   $("error").textContent=
+    "لم نجد الفاتورة، تأكد من الرقم";
+   return;
+  }
+
+  if(results.size!==1){
+   $("error").textContent=
+    "يوجد أكثر من طلب بهذا الرقم، راجع الكاشير";
+   return;
+  }
+
+  const orderId=results.docs[0].id;
+  $("message").textContent="تم العثور على طلبك ✅";
+  $("link").href=
+   "wallet.html?id="+encodeURIComponent(orderId);
+  $("result").hidden=false;
+
+ }catch(err){
+  console.error(err);
+  $("error").textContent=
+   "تعذر البحث عن الفاتورة حالياً. راجع الكاشير";
+ }finally{
+  button.disabled=false;
+  button.textContent="متابعة الطلب";
+ }
+});
+</script>
+</body>
+</html>
