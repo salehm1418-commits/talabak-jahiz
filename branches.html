@@ -1,11 +1,284 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>إدارة الفروع | طلبك جاهز</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#f7f4ef;color:#30251d;
+ font-family:system-ui,Tahoma,sans-serif
+}
+header{
+ background:#211913;color:white;
+ padding:24px 18px;text-align:center
+}
+header h1{margin:0;color:#edc18a}
+header p{color:#d1bca7}
+main{max-width:750px;margin:auto;padding:20px}
+.card{
+ background:white;border:1px solid #e8dfd5;
+ border-radius:20px;padding:22px;margin-bottom:16px;
+ box-shadow:0 5px 20px #00000008
+}
+h2{margin-top:0}
+label{display:block;margin:12px 0 5px}
+input{
+ width:100%;padding:14px;border-radius:11px;
+ border:1px solid #d7c8b8;font:inherit
+}
+button{
+ background:#6b4b33;color:white;border:0;
+ border-radius:11px;padding:13px 18px;
+ font:inherit;font-weight:bold;cursor:pointer
+}
+button.secondary{background:#e9e1d8;color:#493628}
+button:disabled{opacity:.5}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.hide{display:none!important}
+.muted{color:#817467}
+.msg{color:#a14832;white-space:pre-wrap}
+.branch{
+ border:1px solid #e9dfd4;border-radius:15px;
+ padding:18px;margin-top:15px
+}
+.status{font-weight:bold;color:#a36b27}
+.status.active{color:#25824c}
+.stat{
+ background:#f8f4ee;padding:13px;
+ border-radius:11px;margin:9px 0
+}
+a{color:#6b4b33}
+</style>
 </head>
 <body>
-<h1>إدارة الفروع ☕</h1>
-<p>جاري تجهيز نظام الفروع</p>
+
+<header>
+<h1>طلبك جاهز ☕</h1>
+<p>لوحة إدارة فروع الكافيه</p>
+</header>
+
+<main>
+
+<section id="loading" class="card">
+جاري التحقق من حسابك...
+</section>
+
+<section id="login" class="card hide">
+<h2>تسجيل دخول مدير الكافيه</h2>
+<label for="email">البريد الإلكتروني</label>
+<input id="email" type="email" autocomplete="email">
+<label for="password">كلمة المرور</label>
+<input id="password" type="password" autocomplete="current-password">
+<div class="actions">
+<button id="loginBtn">تسجيل الدخول</button>
+</div>
+<p id="loginMsg" class="msg"></p>
+</section>
+
+<section id="dashboard" class="hide">
+
+<div class="card">
+<h2 id="cafeTitle">كافيه</h2>
+<p id="ownerEmail" class="muted"></p>
+<div class="actions">
+<button id="logoutBtn" class="secondary">تسجيل الخروج</button>
+</div>
+</div>
+
+<div class="card">
+<h2>فروع الكافيه</h2>
+<p class="muted">
+هنا تتابع اشتراك كل فرع بشكل مستقل.
+</p>
+<div id="branches"></div>
+<p id="dataMsg" class="msg"></p>
+</div>
+
+<div class="card">
+<h2>إضافة فرع جديد</h2>
+<p class="muted">
+قريباً تقدر تضيف فرع جديد وتشترك له بشكل مستقل،
+وتخصص له QR وشاشة باريستا.
+</p>
+<button disabled>إضافة فرع — قريباً</button>
+</div>
+
+</section>
+
+</main>
+
+<script type="module">
+import {initializeApp} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+ getAuth,onAuthStateChanged,
+ signInWithEmailAndPassword,signOut
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+import {
+ getFirestore,doc,getDoc,onSnapshot
+} from
+"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const app=initializeApp({
+ apiKey:"AIzaSyDS6Sx7FNZPisOe48xKpr0LfVujpn9NpxM",
+ authDomain:"talabak-jahiz-ba884.firebaseapp.com",
+ projectId:"talabak-jahiz-ba884",
+ storageBucket:"talabak-jahiz-ba884.firebasestorage.app",
+ messagingSenderId:"328520935117",
+ appId:"1:328520935117:web:96c8d056b218855735ab84"
+});
+
+const auth=getAuth(app);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+const show=(id,visible)=>
+ $(id).classList.toggle("hide",!visible);
+
+let stopCafe=null;
+let authVersion=0;
+
+function escapeHtml(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function formatDate(timestamp){
+ if(!timestamp?.toDate)return "غير محدد";
+ return timestamp.toDate().toLocaleDateString("ar-SA");
+}
+
+function subscriptionDetails(cafe){
+ const expiry=cafe.subscriptionEndsAt?.toMillis?.()||0;
+ const active=cafe.subscriptionStatus==="active"
+  && expiry>Date.now();
+
+ const days=active
+  ?Math.ceil((expiry-Date.now())/86400000)
+  :0;
+
+ return {active,days};
+}
+
+$("loginBtn").onclick=async()=>{
+ $("loginMsg").textContent="جاري الدخول...";
+ try{
+  await signInWithEmailAndPassword(
+   auth,$("email").value.trim(),
+   $("password").value
+  );
+  $("loginMsg").textContent="";
+ }catch(e){
+  $("loginMsg").textContent=
+   "تعذر الدخول، تأكد من البريد وكلمة المرور";
+ }
+};
+
+$("logoutBtn").onclick=()=>signOut(auth);
+
+onAuthStateChanged(auth,async user=>{
+ const version=++authVersion;
+ stopCafe?.();
+ stopCafe=null;
+
+ show("loading",!!user);
+ show("login",!user);
+ show("dashboard",false);
+ $("dataMsg").textContent="";
+
+ if(!user)return;
+
+ if(user.uid==="Jbx8OGTp1LfLW1pDhwpyGeEY6oS2"){
+  location.replace("admin.html");
+  return;
+ }
+
+ try{
+  const profile=await getDoc(doc(db,"users",user.uid));
+  if(version!==authVersion)return;
+
+  if(!profile.exists()||profile.data().role!=="owner"){
+   show("loading",true);
+   $("loading").textContent=
+    "هذا الحساب غير مرتبط بمدير كافيه.";
+   return;
+  }
+
+  const cafeId=profile.data().cafeId;
+  if(typeof cafeId!=="string"||!cafeId){
+   throw Error("بيانات الكافيه غير مكتملة");
+  }
+
+  $("ownerEmail").textContent=user.email||"";
+
+  stopCafe=onSnapshot(
+   doc(db,"cafes",cafeId),
+   snapshot=>{
+    if(version!==authVersion)return;
+
+    show("loading",false);
+    show("dashboard",true);
+
+    if(!snapshot.exists()){
+     $("dataMsg").textContent="الكافيه غير موجود";
+     return;
+    }
+
+    const cafe=snapshot.data();
+    $("cafeTitle").textContent=cafe.name||"كافيه";
+    const sub=subscriptionDetails(cafe);
+
+    const statusText=sub.active
+     ?"مفعّل"
+     :cafe.subscriptionStatus==="pending"
+      ?"بانتظار التفعيل"
+      :"متوقف أو منتهي";
+
+    $("branches").innerHTML=`
+     <div class="branch">
+      <h3>☕ الفرع الأساسي</h3>
+      <p class="muted">
+       ${escapeHtml(cafe.name||"الكافيه")}
+      </p>
+      <p class="status ${sub.active?"active":""}">
+       ${statusText}
+      </p>
+      <div class="stat">
+       تاريخ انتهاء الاشتراك:
+       <strong>${escapeHtml(formatDate(cafe.subscriptionEndsAt))}</strong>
+      </div>
+      <div class="stat">
+       الأيام المتبقية:
+       <strong>${sub.days} يوم</strong>
+      </div>
+      ${sub.active&&sub.days<=7
+       ?'<p class="msg">⚠️ اشتراك الفرع يقترب من الانتهاء</p>'
+       :""}
+     </div>
+    `;
+   },
+   e=>{
+    show("loading",false);
+    show("dashboard",true);
+    $("dataMsg").textContent=
+     "تعذر تحميل بيانات الكافيه: "+e.code;
+   }
+  );
+
+ }catch(e){
+  if(version!==authVersion)return;
+  show("loading",true);
+  $("loading").textContent=
+   "تعذر تحميل الحساب: "+(e.code||e.message);
+ }
+});
+</script>
 </body>
 </html>
